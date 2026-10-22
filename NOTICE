@@ -1,0 +1,23 @@
+Adamanteum desktop. The code in this repository is MIT licensed (see LICENSE).
+
+Runtime dependencies (installed by npm ci, not bundled here):
+  @babel/parser 8.0.7 and @babel/traverse 8.0.7 ........ MIT (Babel contributors)
+  web-tree-sitter 0.25.10 .............................. MIT (Tree-sitter contributors)
+  tree-sitter-wasms 0.1.13 (wrapper) ................... Unlicense
+
+tree-sitter-wasms ships prebuilt WebAssembly grammars. Each grammar keeps the license of
+its own upstream project. Inventory below: the license field that the npm registry reports
+for each upstream grammar package, looked up 21 Oct 2026. The wrapper build used earlier
+grammar versions, so confirm each against the exact version before a public release.
+This is an inventory, not legal advice.
+
+  c, c_sharp, cpp, css, embedded_template, go, html, java, kotlin, lua, objc, ocaml, php,
+  ruby, rust, scala, swift, systemrdl, toml, zig, tlaplus, bash, python, typescript,
+  javascript, json, yaml, elm, ql, elisp ....................................... MIT
+  elixir ............................................................... Apache-2.0
+  dart, rescript, solidity, vue ..... built from GitHub sources, not npm. Check upstream:
+    UserNobody14/tree-sitter-dart, rescript-lang/tree-sitter-rescript,
+    JoranHonig/tree-sitter-solidity, tree-sitter-grammars/tree-sitter-vue.
+  (Elisp, Elm and QL are present in the grammar bundle but not mapped to a file type.)
+
+No WASM binaries or node_modules are included in this repository; npm installs them.

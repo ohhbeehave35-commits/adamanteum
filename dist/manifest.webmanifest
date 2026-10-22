@@ -1,0 +1,24 @@
+{
+  "name": "Adamantium",
+  "short_name": "Adamantium",
+  "description": "A local knowledge atlas for your Markdown vault.",
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/",
+  "background_color": "#100e18",
+  "theme_color": "#100e18",
+  "icons": [
+    {
+      "src": "/assets/adamantium-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/adamantium-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

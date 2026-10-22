@@ -1,0 +1,42 @@
+{
+  "name": "adamantium-atlas",
+  "version": "0.6.1-door",
+  "private": true,
+  "description": "A local, model-free knowledge atlas for a Markdown vault and your code: search, graph, Bases, Canvas, communities, call resolution.",
+  "files": [
+    "*.mjs",
+    "python-extractor.py",
+    "dist/",
+    "assets/",
+    "Start-Adamantium.ps1",
+    "Launch Adamantium.cmd",
+    "README.md",
+    "SECURITY.md",
+    "tests/*.test.mjs",
+    "LICENSE",
+    "NOTICE",
+    "samples/",
+    "tests/visual-baseline-04.json",
+    "tests/fixtures/",
+    "MCP.md"
+  ],
+  "type": "module",
+  "bin": {
+    "adamantium": "./adamantium-cli.mjs"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node --max-old-space-size=3072 server.mjs",
+    "graph": "node adamantium-cli.mjs",
+    "test": "node --test --test-concurrency=4 tests/*.test.mjs"
+  },
+  "dependencies": {
+    "@babel/parser": "8.0.7",
+    "@babel/traverse": "8.0.7",
+    "tree-sitter-wasms": "0.1.13",
+    "web-tree-sitter": "0.25.10"
+  },
+  "license": "MIT"
+}
