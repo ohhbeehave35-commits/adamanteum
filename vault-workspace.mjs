@@ -27,11 +27,45 @@ export function markdown(body,properties={},original=null){
  if(original?.block&&same({...original.properties},{...properties}))return original.block+body;
  return Object.keys(properties).length?'---\n'+stringifyYaml(properties)+'\n---\n'+body:body;
 }
-export function tagsOf(text){
+// Inline tags as Obsidian's reader finds them: not inside fenced code, a code span (it may run over lines inside one paragraph),
+// an HTML comment, <style> or <script>, or a link target. A tag starts at a # that follows the start, a space, * or [ (or the
+// end of the previous tag, as in #a/#b); after a letter, digit, bracket, colon, equals sign or other mark it is not a tag. Its name is every character up to the next space or punctuation mark (a letter, digit, - _ / or most symbols stay),
+// needs one non-digit, and a trailing slash is dropped.
+const TAG_STOP=/[ -⁯⸀-⹿'!"#$%&()*+,.:;<=>?@^`{|}~\[\]\\\s]/u,TAG_BEFORE=/[\s*[]/u;
+export function inlineTags(body){
+ const text=String(body)
+  .replace(/^ {0,3}(`{3,}|~{3,})[\s\S]*?(?:^ {0,3}\1[`~]*[ \t]*$|(?![\s\S]))/gm,'')
+  .replace(/<!--[\s\S]*?-->|<(style|script)\b[\s\S]*?<\/\1>/gi,'')
+  .replace(/(`+)(?!`)(?:(?!\1)[^\n]|\n(?![ \t]*\n))*?\1(?!`)/g,'')
+  .replace(/\]\([^)\n]*\)/g,'](link)');
+ const out=[];let chainEnd=-1;
+ for(let i=0;i<text.length;i++){
+  if(text[i]!=='#')continue;
+  const prev=i?text[i-1]:'';
+  if(prev&&!(TAG_BEFORE.test(prev)||chainEnd===i))continue;
+  let j=i+1;while(j<text.length&&!TAG_STOP.test(text[j]))j++;
+  const raw=text.slice(i+1,j);
+  if(!raw||!/\D/.test(raw))continue;
+  out.push(raw.replace(/\/+$/,''));chainEnd=j;i=j-1;
+ }
+ return out;
+}
+export function tagOccurrences(text){
  const {properties,body}=frontmatter(text),raw=properties.tags??properties.tag??[];
- const listed=(Array.isArray(raw)?raw:String(raw??'').split(/[, ]+/)).map(t=>String(t).replace(/^#/,'').trim());
- const inline=[...body.replace(/^ {0,3}(`{3,}|~{3,})[\s\S]*?(?:^ {0,3}\1[`~]*[ \t]*$|(?![\s\S]))/gm,'').replace(/`[^`\n]*`/g,'').replace(/\]\([^)\n]*\)/g,'](link)').matchAll(/(?:^|[\s(])#([\p{L}\p{N}\p{M}\p{So}\p{Sm}_/-]+)/gu)].map(m=>m[1].replace(/\/+$/,'')).filter(t=>t&&/\D/.test(t)); // Obsidian's grammar: any non-digit (a slash or a symbol counts) makes it a tag
- return [...new Set([...listed,...inline].filter(Boolean))];
+ // A frontmatter value written as one string counts only when it has no comma (a comma-separated string is not a list to Obsidian, and its tag pane skips it); spaces separate the names.
+ const listed=(Array.isArray(raw)?raw:/,/.test(String(raw??''))?[]:String(raw??'').split(/\s+/)).map(t=>String(t??'').replace(/^#/,'').trim());
+ return [...listed,...inlineTags(body)].filter(Boolean);
+}
+export function tagsOf(text){return [...new Set(tagOccurrences(text))];}
+// The tag pane's counts, by Obsidian's own rule (metadataCache.getTags): every occurrence counts, one trailing "/" is
+// dropped, a tag needs a non-digit, each parent of a nested tag (a/b -> a) counts once more, and names that differ only
+// in letter case are one tag, shown in the spelling used most often.
+export function obsidianTagCounts(occurrenceLists){
+ const exact=new Map(),add=tag=>{if(tag.endsWith('/'))tag=tag.slice(0,-1);if(!tag||!/\D/.test(tag))return;exact.set(tag,(exact.get(tag)||0)+1);const last=tag.split('/').pop();if(last!==tag)add(tag.slice(0,tag.length-last.length-1));};
+ for(const list of occurrenceLists)for(const tag of list)add(String(tag));
+ const groups=new Map();
+ for(const [tag,count] of exact){const key=tag.toLowerCase(),g=groups.get(key);if(!g)groups.set(key,{tag,count,max:count});else{g.count+=count;if(count>g.max){g.max=count;g.tag=tag;}}}
+ return Object.fromEntries([...groups.values()].map(g=>[g.tag,g.count]));
 }
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];

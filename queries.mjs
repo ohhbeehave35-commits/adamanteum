@@ -1,5 +1,5 @@
 import path from 'node:path';
-import {frontmatter} from './vault-workspace.mjs';
+import {frontmatter,obsidianTagCounts} from './vault-workspace.mjs';
 import {advancedSearch,searchPlan} from './vault-search.mjs';
 import {baseView} from './vault-views.mjs';
 import {compileIgnore} from './obsidian-excluded.mjs';
@@ -45,7 +45,7 @@ export function queryVault(db,kind,input={}){
   if(!doc)return null;
   const connections=db.prepare(`SELECT ${fields.split(',').map(f=>'d.'+f).join(',')},e.source=? AS outgoing FROM edges e JOIN docs d ON d.id=CASE WHEN e.source=? THEN e.target ELSE e.source END WHERE e.source=? OR e.target=? ORDER BY d.degree DESC LIMIT 100`).all(doc.id,doc.id,doc.id,doc.id);
   const note=/\.canvas$/i.test(doc.path)?{properties:{},body:doc.body}:frontmatter(doc.body),tags=(()=>{try{return JSON.parse(db.prepare('SELECT tags FROM doc_metadata WHERE id=?').get(doc.id)?.tags||'[]');}catch{return [];}})();
-  return {...doc,properties:note.properties,renderBody:note.body,frontmatterError:note.error||null,tags,connections,provenance:provenance(doc)};
+  return {...doc,properties:note.properties,renderBody:note.body,frontmatterError:note.error||null,tags:[...new Set(tags)],connections,provenance:provenance(doc)};
  }
  if(kind==='graph'){
   const limit=Math.max(30,Math.min(900,Number(input.limit)||500)),focus=Number(input.focus)||null;
@@ -55,7 +55,10 @@ export function queryVault(db,kind,input={}){
   for(const n of nodes)for(const edge of statement.all(n.id))if(ids.has(edge.target))edges.push(edge);
   return {nodes,edges,scope,focus,total:documentCount(db),limit};
  }
- if(kind==='tags')return db.prepare('SELECT t.value tag,count(*) count FROM doc_metadata m JOIN docs d ON d.id=m.id,json_each(m.tags) t WHERE d.category=? GROUP BY t.value ORDER BY count DESC,t.value LIMIT 50000').all(scope);
+ if(kind==='tags'){ // the tag pane as Obsidian counts it: every occurrence, each parent of a nested tag, one tag per spelling
+  const counts=obsidianTagCounts(db.prepare('SELECT m.tags FROM doc_metadata m JOIN docs d ON d.id=m.id WHERE d.category=?').all(scope).map(r=>{try{return JSON.parse(r.tags||'[]');}catch{return [];}}));
+  return Object.entries(counts).map(([tag,count])=>({tag,count})).sort((x,y)=>y.count-x.count||(x.tag<y.tag?-1:1)).slice(0,50000);
+ }
  if(kind==='properties')return db.prepare('SELECT p.key name,count(*) count,group_concat(DISTINCT p.type) types FROM doc_metadata m JOIN docs d ON d.id=m.id,json_each(m.properties) p WHERE d.category=? GROUP BY p.key ORDER BY count DESC,p.key LIMIT 500').all(scope);
  if(kind==='base'){
   const options={view:input.view,offset:input.offset,limit:input.pageSize};

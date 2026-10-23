@@ -16,11 +16,13 @@ test('a path link resolves from the vault root before the linking note\'s folder
   assert.equal(resolve('Notes/Index.md', 'Plan'), 'Notes/Only-here/Plan.md');
 });
 
-test('the tag list is not capped at 2,000', () => {
+test('the tag list is not capped at 2,000', async () => {
+  const {obsidianTagCounts} = await import('../vault-workspace.mjs');
+  const many = Array.from({length: 3000}, (_, i) => 'tag' + i);
+  assert.equal(Object.keys(obsidianTagCounts([many])).length, 3000);
   const sql = readFileSync(new URL('../queries.mjs', import.meta.url), 'utf8');
-  const m = /json_each\(m\.tags\)[^']*LIMIT (\d+)/.exec(sql);
-  assert.ok(m, 'tag list query found');
-  assert.ok(Number(m[1]) >= 10000, `tag list limit is ${m[1]}`);
+  const m = /\.slice\(0,(\d+)\)/.exec(sql.slice(sql.indexOf("kind==='tags'")));
+  assert.ok(m && Number(m[1]) >= 10000, 'tag list limit');
 });
 
 test('digit-led tags are tags, as in Obsidian; all-digit ones are not', async () => {
@@ -32,5 +34,6 @@ test('digit-led tags are tags, as in Obsidian; all-digit ones are not', async ()
 
 test('a link to a heading is not a tag, and a trailing slash is not part of one', async () => {
   const {tagsOf} = await import('../vault-workspace.mjs');
-  assert.deepEqual(tagsOf('See [setup](#1-core-server-configuration) and (#real-tag) and #folder/'), ['real-tag', 'folder']);
+  // Measured against Obsidian 22 Oct: a # right after "(" is not a tag there, so (#real-tag) is skipped; a space-led one is kept.
+  assert.deepEqual(tagsOf('See [setup](#1-core-server-configuration) and (#not-a-tag) and #real-tag and #folder/'), ['real-tag', 'folder']);
 });

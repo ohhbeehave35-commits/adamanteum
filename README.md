@@ -76,7 +76,7 @@ Measured on a copy of a 96,605-note working vault, with Obsidian 1.14 on the ori
 | Notes opened | Equal | 96,578 of Obsidian's 96,596; the other 18 were written after the copy was taken. |
 | Links and backlinks | Equal | 30 of 31 sampled notes identical; the one difference is inside a folder Obsidian excludes. |
 | Graph, search operators, daily notes, properties, templates, bookmarks, Bases, Canvas | Equal | Same results on every check. |
-| Tags | Not equal yet | 382 of 3,671 tags have the exact same count and 793 are within 2%; work continues. |
+| Tags | Equal (3,671 of 3,679 tags identical) | Same tag names and counts as Obsidian's tag pane, counting every use and each parent of a nested tag: 3,671 of 3,679 match exactly, 4 are only in Obsidian and 7 only here, on notes with odd HTML or code. |
 | Search speed | Faster | 16.5 ms per page of results, against 8.3 s for Obsidian's command line, warm. |
 | Start to first search | 0.77 s | Cold start on the same vault. |
 | Code map against Graphify | 85% of call edges | Python 85.6%, JavaScript 63%; 99.9% of declarations. |

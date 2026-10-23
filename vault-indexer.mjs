@@ -1,4 +1,4 @@
-import {frontmatter,tagsOf} from './vault-workspace.mjs';
+import {frontmatter,tagOccurrences} from './vault-workspace.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {DatabaseSync} from 'node:sqlite';
@@ -72,7 +72,7 @@ export async function reconcileVault({vault,database,changedPaths=null,progress=
      if(before){const previous=getBody.get(before.id);eraseFTS.run(before.id,previous.title,searchText(p,previous.body));update.run(t,folder,category(p),stat.mtimeMs,stat.size,body,before.id);id=before.id;}
      else {id=insert.run(p,t,folder,category(p),stat.mtimeMs,stat.size,body).lastInsertRowid;membershipChanged=true;changedNames.add(path.posix.basename(p).replace(/\.[^.]+$/,''));if(!isCanvas(p))for(const alias of [].concat(frontmatter(body).properties.aliases??[]))if(typeof alias==='string')changedNames.add(alias);}
      changedIds.add(Number(id));
-     addFTS.run(id,t,searchText(p,body));db.prepare('INSERT OR REPLACE INTO doc_metadata VALUES(?,?,?)').run(id,JSON.stringify(isCanvas(p)?{}:frontmatter(body).properties),JSON.stringify(isCanvas(p)?[]:tagsOf(body)));report.changed++;
+     addFTS.run(id,t,searchText(p,body));db.prepare('INSERT OR REPLACE INTO doc_metadata VALUES(?,?,?)').run(id,JSON.stringify(isCanvas(p)?{}:frontmatter(body).properties),JSON.stringify(isCanvas(p)?[]:tagOccurrences(body)));report.changed++;
     }
     db.exec('COMMIT');
    }catch(e){db.exec('ROLLBACK');throw e;}
